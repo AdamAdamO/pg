@@ -5,7 +5,9 @@ import urllib2
 
 CACHE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "cache")
 KEYWORDS = ["same way", "same reason"]
-SKIP = ["behaved the same way people did at the time"]
+SKIP = ["behaved the same way people did at the time",
+        "flout school rules in the same way",
+        "say something exactly the same way"]
 RADIUS = 2
 
 # Returns a list of (url, title) pairs
