@@ -4,6 +4,9 @@ import os
 import urllib2
 
 CACHE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "cache")
+KEYWORDS = ["same way", "same reason"]
+SKIP = ["behaved the same way people did at the time"]
+RADIUS = 2
 
 # Returns a list of (url, title) pairs
 def feed():
@@ -36,12 +39,49 @@ def download(url):
     file.close()
     return html
 
+# Splits html up into a list of sentences. Buggy
+def sentences(html):
+    for junk in ["\n", "<br>", "<i>", "</i>"]:
+        html = html.replace(junk, " ")
+    parts = html.split(".")[:-1]
+    return [part.strip() + "." for part in parts]
+
+def windows(alist, length):
+    answer = []
+    for i in range(len(alist)):
+        window = alist[i:i+length]
+        if len(window) != length:
+            break
+        answer.append(window)
+    return answer
+
+def window_grep(parts):
+    wins = windows(parts, 2 * RADIUS + 1)
+    answer = []
+    for win in wins:
+        match = any(win[RADIUS].count(key) for key in KEYWORDS)
+        if not match:
+            continue
+        if any(win[RADIUS].count(skip) for skip in SKIP):
+            continue
+        answer.append(win)
+    return answer
+
+# Generates markdown
 def main():
     for url, title in feed():
-        print("url:", url)
-        print("title:", title)
         html = download(url)
-        print(title, "is", len(html), "long")
+        wins = window_grep(sentences(html))
+        if not wins:
+            continue
+        print("## [" + title + "](" + url + ")")
+        print("")
+        for win in wins:
+            for i, sentence in enumerate(win):
+                if i == RADIUS:
+                    sentence = "**" + sentence + "**"
+                print(sentence)
+            print("")
     
 if __name__ == "__main__":
     main()
